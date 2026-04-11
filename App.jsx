@@ -7,6 +7,8 @@ import { View, Text, StyleSheet } from 'react-native';
 
 import SplashScreen from './src/Components/Screens/SplashScreen';
 import LoginScreen from './src/Components/Screens/LoginScreen';
+import SignupScreen from './src/Components/Screens/SignupScreen';
+import VerifyOtpScreen from './src/Components/Screens/VerifyOtpScreen';
 
 
 const Stack = createStackNavigator();
@@ -29,13 +31,7 @@ const HomeScreen = () => {
   );
 };
 
-const SignupScreen = () => {
-  return (
-    <View style={styles.center}>
-      <Text style={styles.homeText}>Signup Screen</Text>
-    </View>
-  );
-};
+
 
 const ForgotPasswordScreen = () => {
   return (
@@ -57,7 +53,8 @@ function App() {
             <Stack.Screen name="SplashScreen" component={SplashScreen} />
             <Stack.Screen name="LoginScreen" component={LoginScreen} />
             <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="Signup" component={SignupScreen} />
+            <Stack.Screen name="SignupScreen" component={SignupScreen} />
+            <Stack.Screen name="VerifyOtpScreen" component={VerifyOtpScreen} />
             <Stack.Screen
               name="ForgotPassword"
               component={ForgotPasswordScreen}
