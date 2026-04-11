@@ -1,11 +1,13 @@
 import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
-import {Provider as PaperProvider, DefaultTheme} from 'react-native-paper';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {View, Text, StyleSheet} from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { Provider as PaperProvider, DefaultTheme } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet } from 'react-native';
 
 import SplashScreen from './src/Components/Screens/SplashScreen';
+import LoginScreen from './src/Components/Screens/LoginScreen';
+
 
 const Stack = createStackNavigator();
 
@@ -19,13 +21,30 @@ const theme = {
   },
 };
 
-const LoginScreen = () => {
+const HomeScreen = () => {
   return (
-    <View style={styles.loginContainer}>
-      <Text style={styles.loginText}>Login Screen</Text>
+    <View style={styles.center}>
+      <Text style={styles.homeText}>Home Screen</Text>
     </View>
   );
 };
+
+const SignupScreen = () => {
+  return (
+    <View style={styles.center}>
+      <Text style={styles.homeText}>Signup Screen</Text>
+    </View>
+  );
+};
+
+const ForgotPasswordScreen = () => {
+  return (
+    <View style={styles.center}>
+      <Text style={styles.homeText}>Forgot Password Screen</Text>
+    </View>
+  );
+};
+
 
 function App() {
   return (
@@ -34,9 +53,15 @@ function App() {
         <NavigationContainer>
           <Stack.Navigator
             initialRouteName="SplashScreen"
-            screenOptions={{headerShown: false}}>
+            screenOptions={{ headerShown: false }}>
             <Stack.Screen name="SplashScreen" component={SplashScreen} />
-            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="LoginScreen" component={LoginScreen} />
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
+            <Stack.Screen
+              name="ForgotPassword"
+              component={ForgotPasswordScreen}
+            />
           </Stack.Navigator>
         </NavigationContainer>
       </PaperProvider>
