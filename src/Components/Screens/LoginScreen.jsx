@@ -85,7 +85,7 @@ const LoginScreen = ({ navigation }) => {
     setShowSuccessAlert(false);
     setEmail('');
     setPassword('');
-    navigation.replace('Home');
+    navigation.replace('MainTabs');
   };
 
   return (
