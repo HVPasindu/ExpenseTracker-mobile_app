@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
 import {Card, ActivityIndicator, Portal, Dialog} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import * as DocumentPicker from '@react-native-documents/picker';
+import {useFocusEffect} from '@react-navigation/native';
 
 const ExpensesScreen = ({navigation}) => {
   const [expenses, setExpenses] = useState([]);
@@ -20,8 +22,10 @@ const ExpensesScreen = ({navigation}) => {
   const [error, setError] = useState('');
 
   const [openSlipExpenseId, setOpenSlipExpenseId] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState({});
   const [expenseSlips, setExpenseSlips] = useState({});
   const [slipLoadingId, setSlipLoadingId] = useState(null);
+  const [slipUploadLoadingId, setSlipUploadLoadingId] = useState(null);
   const [slipDeleteLoadingId, setSlipDeleteLoadingId] = useState(null);
 
   const [showDeleteExpenseDialog, setShowDeleteExpenseDialog] = useState(false);
@@ -30,10 +34,6 @@ const ExpensesScreen = ({navigation}) => {
   const [showDeleteSlipDialog, setShowDeleteSlipDialog] = useState(false);
   const [selectedSlipId, setSelectedSlipId] = useState(null);
   const [selectedSlipExpenseId, setSelectedSlipExpenseId] = useState(null);
-
-  useEffect(() => {
-    fetchExpenses(page);
-  }, [page]);
 
   const fetchExpenses = async currentPage => {
     try {
@@ -64,6 +64,18 @@ const ExpensesScreen = ({navigation}) => {
       setLoading(false);
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      setPage(1);
+      fetchExpenses(1);
+
+      return () => {
+        setOpenSlipExpenseId(null);
+        setError('');
+      };
+    }, []),
+  );
 
   const handleDeleteExpensePress = id => {
     setSelectedExpenseId(id);
@@ -130,6 +142,75 @@ const ExpensesScreen = ({navigation}) => {
 
     setOpenSlipExpenseId(expenseId);
     await fetchSlipsByExpense(expenseId);
+  };
+
+  const handleFileChange = async expenseId => {
+    try {
+      setError('');
+
+      const result = await DocumentPicker.pick({
+        allowMultiSelection: false,
+        type: ['image/jpeg', 'image/png', 'application/pdf'],
+      });
+
+      const file = Array.isArray(result) ? result[0] : result;
+
+      setSelectedFiles(prev => ({
+        ...prev,
+        [expenseId]: file,
+      }));
+    } catch (err) {
+      if (DocumentPicker.isError?.(err)) {
+        if (err.code !== 'DOCUMENT_PICKER_CANCELED') {
+          setError('Failed to select file');
+        }
+      }
+    }
+  };
+
+  const handleUploadSlip = async expenseId => {
+    const file = selectedFiles[expenseId];
+
+    if (!file) {
+      setError('Please select a slip file first');
+      return;
+    }
+
+    try {
+      setSlipUploadLoadingId(expenseId);
+      setError('');
+
+      const token = await AsyncStorage.getItem('token');
+
+      const formData = new FormData();
+      formData.append('slip', {
+        uri: file.uri,
+        type: file.type || 'application/octet-stream',
+        name: file.name || `slip-${Date.now()}`,
+      });
+
+      await axios.post(
+        `https://expense-tracker-backend-o3ow.onrender.com/expense-slips/${expenseId}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+
+      setSelectedFiles(prev => ({
+        ...prev,
+        [expenseId]: null,
+      }));
+
+      await fetchSlipsByExpense(expenseId);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to upload slip');
+    } finally {
+      setSlipUploadLoadingId(null);
+    }
   };
 
   const handleDeleteSlipPress = (expenseId, slipId) => {
@@ -264,6 +345,42 @@ const ExpensesScreen = ({navigation}) => {
                     <View style={styles.slipSection}>
                       <Text style={styles.slipSectionTitle}>Expense Slips</Text>
 
+                      {selectedFiles[expense.id] ? (
+                        <Text style={styles.selectedFileText}>
+                          Selected File: {selectedFiles[expense.id].name}
+                        </Text>
+                      ) : null}
+
+                      <View style={styles.uploadActionRow}>
+                        <TouchableOpacity
+                          style={[
+                            styles.uploadButton,
+                            slipUploadLoadingId === expense.id &&
+                              styles.disabledButton,
+                          ]}
+                          onPress={() => handleUploadSlip(expense.id)}
+                          disabled={slipUploadLoadingId === expense.id}>
+                          {slipUploadLoadingId === expense.id ? (
+                            <ActivityIndicator
+                              animating={true}
+                              color="#ffffff"
+                            />
+                          ) : (
+                            <Text style={styles.uploadButtonText}>
+                              UPLOAD SLIP
+                            </Text>
+                          )}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.addSlipButton}
+                          onPress={() => handleFileChange(expense.id)}>
+                          <Text style={styles.addSlipButtonText}>ADD SLIP</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      <Text style={styles.uploadedTitle}>Uploaded Slips</Text>
+
                       {slipLoadingId === expense.id ? (
                         <ActivityIndicator animating={true} color="#00a6fb" />
                       ) : slips.length > 0 ? (
@@ -313,7 +430,11 @@ const ExpensesScreen = ({navigation}) => {
                 page === 1 && styles.paginationButtonDisabled,
               ]}
               disabled={page === 1}
-              onPress={() => setPage(prev => prev - 1)}>
+              onPress={() => {
+                const newPage = page - 1;
+                setPage(newPage);
+                fetchExpenses(newPage);
+              }}>
               <Text style={styles.paginationButtonText}>Previous</Text>
             </TouchableOpacity>
 
@@ -329,7 +450,11 @@ const ExpensesScreen = ({navigation}) => {
                   styles.paginationButtonDisabled,
               ]}
               disabled={page === pagination?.total_pages}
-              onPress={() => setPage(prev => prev + 1)}>
+              onPress={() => {
+                const newPage = page + 1;
+                setPage(newPage);
+                fetchExpenses(newPage);
+              }}>
               <Text style={styles.paginationButtonText}>Next</Text>
             </TouchableOpacity>
           </View>
@@ -538,6 +663,47 @@ const styles = StyleSheet.create({
     color: '#0b132b',
     marginBottom: 14,
   },
+  selectedFileText: {
+    fontSize: 13,
+    color: '#374151',
+    marginBottom: 12,
+  },
+  uploadActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    flexWrap: 'wrap',
+    marginBottom: 16,
+  },
+  uploadButton: {
+    backgroundColor: '#00a6fb',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  uploadButtonText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  addSlipButton: {
+    borderWidth: 1,
+    borderColor: '#6ec1ff',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+  },
+  addSlipButtonText: {
+    color: '#00a6fb',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  uploadedTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0b132b',
+    marginBottom: 12,
+  },
   slipCard: {
     backgroundColor: '#ffffff',
     borderRadius: 14,
@@ -640,5 +806,8 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '700',
     fontSize: 14,
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
 });

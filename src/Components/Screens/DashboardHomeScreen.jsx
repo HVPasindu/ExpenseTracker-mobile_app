@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {Card, ActivityIndicator, Avatar} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import {PieChart} from 'react-native-gifted-charts';
+import {useFocusEffect} from '@react-navigation/native';
 
 const DashboardHomeScreen = ({navigation}) => {
   const [summary, setSummary] = useState(null);
@@ -17,9 +18,11 @@ const DashboardHomeScreen = ({navigation}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     fetchDashboardSummary();
-  }, []);
+  }, []),
+);
 
   const fetchDashboardSummary = async () => {
     try {
