@@ -7,7 +7,7 @@ import BackgroundWrapper from '../Com_components/BackgroundWrapper';
 const SplashScreen = ({navigation}) => {
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigation.replace('Login');
+      navigation.replace('LoginScreen');
     }, 2000);
 
     return () => clearTimeout(timer);
