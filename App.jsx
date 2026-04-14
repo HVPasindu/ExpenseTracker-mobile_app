@@ -12,6 +12,8 @@ import VerifyOtpScreen from './src/Components/Screens/VerifyOtpScreen';
 import ForgotPasswordScreen from './src/Components/Screens/ForgotPasswordScreen';
 import VerifyResetOtpScreen from './src/Components/Screens/VerifyResetOtpScreen';
 import ResetPasswordScreen from './src/Components/Screens/ResetPasswordScreen';
+import BottomTabNavigator from './src/Components/Com_components/BottomTabNavigator';
+import EditExpenseScreen from './src/Components/Screens/EditExpenseScreen';
 
 
 const Stack = createStackNavigator();
@@ -55,6 +57,8 @@ function App() {
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
             <Stack.Screen name="VerifyResetOtpScreen" component={VerifyResetOtpScreen} />
             <Stack.Screen name="ResetPasswordScreen" component={ResetPasswordScreen} />
+            <Stack.Screen name="EditExpenseScreen" component={EditExpenseScreen} />
+            <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
 
           </Stack.Navigator>
         </NavigationContainer>
