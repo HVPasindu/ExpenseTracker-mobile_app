@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -6,23 +6,23 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import {Card, ActivityIndicator, Avatar} from 'react-native-paper';
+import { Card, ActivityIndicator, Avatar } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import {PieChart} from 'react-native-gifted-charts';
-import {useFocusEffect} from '@react-navigation/native';
+import { PieChart } from 'react-native-gifted-charts';
+import { useFocusEffect } from '@react-navigation/native';
 
-const DashboardHomeScreen = ({navigation}) => {
+const DashboardHomeScreen = ({ navigation }) => {
   const [summary, setSummary] = useState(null);
   const [userName, setUserName] = useState('User');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useFocusEffect(
-  useCallback(() => {
-    fetchDashboardSummary();
-  }, []),
-);
+    useCallback(() => {
+      fetchDashboardSummary();
+    }, []),
+  );
 
   const fetchDashboardSummary = async () => {
     try {
@@ -41,8 +41,10 @@ const DashboardHomeScreen = ({navigation}) => {
         return;
       }
 
+      const today = new Date().toLocaleDateString("en-CA");
+
       const response = await axios.get(
-        'https://expense-tracker-backend-o3ow.onrender.com/expenses/dashboard-summary',
+        `https://expense-tracker-backend-o3ow.onrender.com/expenses/dashboard-summary?today=${today}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -155,7 +157,7 @@ const DashboardHomeScreen = ({navigation}) => {
                 textColor="black"
                 showText={false}
                 centerLabelComponent={() => (
-                  <View style={{alignItems: 'center'}}>
+                  <View style={{ alignItems: 'center' }}>
                     <Text style={styles.centerChartText}>Last</Text>
                     <Text style={styles.centerChartBold}>5</Text>
                   </View>
@@ -175,7 +177,7 @@ const DashboardHomeScreen = ({navigation}) => {
                   <View
                     style={[
                       styles.legendColor,
-                      {backgroundColor: colors[index % colors.length]},
+                      { backgroundColor: colors[index % colors.length] },
                     ]}
                   />
                   <Text style={styles.legendText}>
